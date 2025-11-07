@@ -1,0 +1,45 @@
+services:
+  postgres-rclone-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lkduy2602/postgres-rclone-backup:latest
+    volumes:
+      - ./rclone.conf:/rclone.conf:ro
+      - ./pg_password.conf:/pg_password.conf:ro
+    environment:
+      - CRON_SCHEDULE=0 2 * * *
+      - TZ=Asia/Ho_Chi_Minh
+
+      - POSTGRES_HOST=127.0.0.1
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/pg_password.conf
+
+      - BACKUP_FILENAME=postgres.dump
+
+      - RCLONE_REMOTE_NAME=gdrive
+      - RCLONE_REMOTE_PATH=postgres/backups
+      - RCLONE_CONFIG_PATH=/rclone.conf
+
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 10s
