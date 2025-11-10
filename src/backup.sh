@@ -36,7 +36,7 @@ pg_dump \
   -U "$POSTGRES_USER" \
   -d "$POSTGRES_DB" \
   -Fc \
-  -Z 9 | rclone rcat "$TARGET"
+  --compress=zstd:1 | rclone rcat "$TARGET"
 
 log "Backup finished"
 
